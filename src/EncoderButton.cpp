@@ -139,8 +139,13 @@ Proboably easier to work out how to use AI instead of porting this accross.
       encoder->begin();
     }
 
-    void EncoderButton::Encodersetup(){
+    void EncoderButton::Encodersetup(void (*ISR_callback)(void)){
+       encoder->setup(ISR_callback);
+       encoder->disableAcceleration();
+    }
 
+    void EncoderButton::EncoderISR(){
+      encoder->readEncoder_ISR();
     }
 
 

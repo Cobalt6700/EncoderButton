@@ -108,6 +108,11 @@ class EncoderButton {
     EncoderButton(byte switchPin);
 
 
+    void Encoderbegin();
+
+    void Encodersetup(void (*ISR_callback)(void));
+
+    void EncoderISR();
 
 
     /**
@@ -388,9 +393,13 @@ class EncoderButton {
     //Common
     CallbackFunction idle_cb = NULL;
 
+    CallbackFunction isr_cb = NULL;
 
-  private:  
-    Encoder* encoder;
+
+  private:
+
+    AiEsp32RotaryEncoder* encoder; 
+    //Encoder* encoder;
     Bounce* bounce;
     boolean haveButton = false;
     boolean haveEncoder = false;
@@ -419,6 +428,8 @@ class EncoderButton {
     unsigned int _userId = 0;
     unsigned int _userState = 0;
     bool _enabled = true;
+
+    void (*ISR_callback)();
 
 
 

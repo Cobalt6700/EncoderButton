@@ -7,36 +7,51 @@
  */
 
 #include "EncoderButton.h"
+#define ARDUINO_ARCH_ESP32
+
+/*
+
+24/09/23
+
+Had a go at combining ASesp32 into this lib. 
+
+Ran out of knowlage at brining in the setup function - plus it looks like AI needs to read 
+encoderchanged() to get an update. 
+
+Proboably easier to work out how to use AI instead of porting this accross. 
+
+*/
 
 
-EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin )
-  : encoder(new Encoder(encoderPin1, encoderPin2)), bounce(new Bounce()) {
-  haveEncoder = true;
-  haveButton = true;    
-  // Top tip From PJRC's Encoder - without this delay the
-  // long-press doesn't fire on first press.
-  // allow time for a passive R-C filter to charge
-  // through the pullup resistors, before reading
-  // the initial state
-  pinMode(switchPin, INPUT_PULLUP); //Set pullup first
-  delayMicroseconds(2000); //Delay
-  bounce->attach(switchPin, INPUT_PULLUP); //then attach button
-}
+#if defined(ARDUINO_ARCH_ESP32)
+  EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin )
+    : encoder(new AiEsp32RotaryEncoder(encoderPin1, encoderPin2)), bounce(new Bounce()) {
+    haveEncoder = true;
+    haveButton = true;    
+    // Top tip From PJRC's Encoder - without this delay the
+    // long-press doesn't fire on first press.
+    // allow time for a passive R-C filter to charge
+    // through the pullup resistors, before reading
+    // the initial state
+    pinMode(switchPin, INPUT_PULLUP); //Set pullup first
+    delayMicroseconds(2000); //Delay
+    bounce->attach(switchPin, INPUT_PULLUP); //then attach button
+  }
 
-EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2 )
-  : encoder(new Encoder(encoderPin1, encoderPin2)) {
-  haveEncoder = true;
-}
+  EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2 )
+    : encoder(new AiEsp32RotaryEncoder(encoderPin1, encoderPin2)) {
+    haveEncoder = true;
+  }
 
-EncoderButton::EncoderButton(byte switchPin )
-  : bounce(new Bounce()) {
-  haveButton = true;    
-  pinMode(switchPin, INPUT_PULLUP); //Set pullup first
-  delayMicroseconds(2000); //Delay
-  bounce->attach(switchPin, INPUT_PULLUP); //then attach button
-}
+  EncoderButton::EncoderButton(byte switchPin )
+    : bounce(new Bounce()) {
+    haveButton = true;    
+    pinMode(switchPin, INPUT_PULLUP); //Set pullup first
+    delayMicroseconds(2000); //Delay
+    bounce->attach(switchPin, INPUT_PULLUP); //then attach button
+  }
 
-void EncoderButton::update() {
+  void EncoderButton::update() {
   if ( _enabled ) {
     //button update (fires pressed/released callbacks)
     if ( haveButton && bounce->update() ) {
@@ -65,7 +80,7 @@ void EncoderButton::update() {
     }
     //encoder udate (fires encoder rotation callbacks)
     if ( haveEncoder && millis() > (rateLimitCounter + rateLimit) ) { 
-      long newPosition = floor(encoder->read()/positionDivider);
+      long newPosition = floor(encoder->readEncoder()/positionDivider);
       if (newPosition != encoderPosition) {
         encoderIncrement = (newPosition - encoderPosition); 
         encoderPosition = newPosition;
@@ -120,6 +135,133 @@ void EncoderButton::update() {
   }
 }
 
+    void EncoderButton::Encoderbegin(){
+      encoder->begin();
+    }
+
+    void EncoderButton::Encodersetup(){
+
+    }
+
+
+
+#else
+
+  EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin )
+    : encoder(new Encoder(encoderPin1, encoderPin2)), bounce(new Bounce()) {
+    haveEncoder = true;
+    haveButton = true;    
+    // Top tip From PJRC's Encoder - without this delay the
+    // long-press doesn't fire on first press.
+    // allow time for a passive R-C filter to charge
+    // through the pullup resistors, before reading
+    // the initial state
+    pinMode(switchPin, INPUT_PULLUP); //Set pullup first
+    delayMicroseconds(2000); //Delay
+    bounce->attach(switchPin, INPUT_PULLUP); //then attach button
+  }
+
+  EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2 )
+    : encoder(new Encoder(encoderPin1, encoderPin2)) {
+    haveEncoder = true;
+  }
+
+  EncoderButton::EncoderButton(byte switchPin )
+    : bounce(new Bounce()) {
+    haveButton = true;    
+    pinMode(switchPin, INPUT_PULLUP); //Set pullup first
+    delayMicroseconds(2000); //Delay
+    bounce->attach(switchPin, INPUT_PULLUP); //then attach button
+  }
+
+void EncoderButton::update() {
+  if ( _enabled ) {
+    //button update (fires pressed/released callbacks)
+    if ( haveButton && bounce->update() ) {
+      lastEventMs = millis();
+      idleFlagged = false;    
+      if (changed_cb != NULL) changed_cb (*this);
+      _buttonState = bounce->read();
+      if ( bounce->fell() ) {
+        previousState = HIGH;
+        if (pressed_cb != NULL) pressed_cb (*this);
+      } else if (bounce->rose() ) {
+        if ( encodingPressed ) {
+          encodingPressed = false;
+          prevClickCount = 0;
+          clickCounter = 0;
+          if (encoder_released_cb != NULL) encoder_released_cb (*this);
+        } else {
+          if ( previousState == HIGH ) {
+            clickFired = false;
+            clickCounter++;
+          }
+          if (released_cb != NULL) released_cb (*this);
+        }
+        previousState = LOW;
+      }
+    }
+    //encoder udate (fires encoder rotation callbacks)
+    if ( haveEncoder && millis() > (rateLimitCounter + rateLimit) ) { 
+
+      long newPosition = floor(encoder->read()/positionDivider);
+
+      if (newPosition != encoderPosition) {
+        encoderIncrement = (newPosition - encoderPosition); 
+        encoderPosition = newPosition;
+        idleFlagged = false;    
+        lastEventMs = millis();
+        if ( _buttonState == HIGH ) {
+          currentPosition += encoderIncrement;
+          if (encoder_cb != NULL) encoder_cb (*this);
+        } else {
+          encodingPressed = true;
+          currentPressedPosition += encoderIncrement;
+          if (encoder_pressed_cb != NULL) encoder_pressed_cb (*this);
+        }
+      }
+      rateLimitCounter = millis();
+    }
+    //fire long press callbacks
+    if (haveButton && !encodingPressed && LOW == bounce->read() ) {
+      if ( bounce->currentDuration() > (longClickDuration * (longPressCounter+1)) ) {
+        lastEventMs = millis();
+        if ( (repeatLongPress || longPressCounter == 0 ) && long_press_cb != NULL) {
+          long_press_cb (*this);
+        }
+        longPressCounter++;
+      }
+    }
+    //fire button click callbacks
+    if ( haveButton && !clickFired && _buttonState == HIGH && bounce->currentDuration() > multiClickInterval ) {
+      clickFired = true;
+      if ( bounce->previousDuration() > longClickDuration ) {
+        clickCounter = 0;
+        prevClickCount = 1;
+        longPressCounter = 0;
+        if (long_click_cb != NULL) long_click_cb (*this);
+      } else {
+        prevClickCount = clickCounter;
+        if (clickCounter == 3 && triple_click_cb != NULL) {
+          triple_click_cb (*this);
+        } else if ( clickCounter == 2 && double_click_cb != NULL) {
+          double_click_cb (*this);
+        } else {
+          if (click_cb != NULL) click_cb (*this);
+        }
+        clickCounter = 0;
+      }
+    }
+    //fire idle timeout callback
+    if ( !idleFlagged && idle_cb != NULL && msSinceLastEvent() > idleTimeout ) {
+      idleFlagged = true;
+      idle_cb (*this);
+    }
+  }
+}
+
+#endif
+
 void EncoderButton::setChangedHandler(CallbackFunction f) { changed_cb = f; }
 
 void EncoderButton::setPressedHandler(CallbackFunction f) { pressed_cb = f; }
@@ -159,6 +301,7 @@ void EncoderButton::setRateLimit(long ms) { rateLimit = ms; }
 
 void EncoderButton::useQuadPrecision(bool prec) { positionDivider = (prec?1:4); }
 
+#if defined(ARDUINO_ARCH_ESP32)
 void EncoderButton::resetPosition(long pos) {
   encoder->readAndReset();
   encoderPosition = 0;
@@ -170,6 +313,19 @@ void EncoderButton::resetPressedPosition(long pos) {
   encoderPosition = 0;
   currentPressedPosition = pos;  
 }
+#else
+void EncoderButton::resetPosition(long pos) {
+  encoder->readAndReset();
+  encoderPosition = 0;
+  currentPosition = pos;
+}
+
+void EncoderButton::resetPressedPosition(long pos) {
+  encoder->readAndReset();
+  encoderPosition = 0;
+  currentPressedPosition = pos;  
+}
+#endif
 
 void EncoderButton::setIdleTimeout(unsigned int timeoutMs) { idleTimeout = timeoutMs; }
 
@@ -203,6 +359,15 @@ unsigned int EncoderButton::userState() { return _userState; }
 
 bool EncoderButton::enabled() { return _enabled; }
 
+#if defined(ARDUINO_ARCH_ESP32)
+void EncoderButton::enable(bool e) { 
+  _enabled = e;
+  if ( e == true ) {
+    //Reset the encoder so we don't trigger an event
+    encoder->setEncoderValue(encoderPosition*positionDivider);
+  }
+}
+#else
 void EncoderButton::enable(bool e) { 
   _enabled = e;
   if ( e == true ) {
@@ -210,5 +375,5 @@ void EncoderButton::enable(bool e) {
     encoder->write(encoderPosition*positionDivider);
   }
 }
-
+#endif
 

@@ -33,23 +33,39 @@
 #ifndef EncoderButton_h
 #define EncoderButton_h
 
+#define ARDUINO_ARCH_ESP32
+
 #include "Arduino.h"
 
-//Standing on the shoulders of giants
-// http://www.pjrc.com/teensy/td_libs_Encoder.html
-#ifndef Encoder_h
-  #include <Encoder.h>
+#if defined(ARDUINO_ARCH_ESP32)
+  #ifndef AiEsp32RotaryEncoder.h
+    #include "AiEsp32RotaryEncoder.h"
+  #endif
+#else
+  //Standing on the shoulders of giants
+  // http://www.pjrc.com/teensy/td_libs_Encoder.html
+  #ifndef Encoder_h
+    #include <Encoder.h>
+  #endif
 #endif
-
 #ifndef Bounce2_h
   #include <Bounce2.h>
 #endif
 
-#if defined(ARDUINO_ARCH_ESP32) || defined(ESP8266) || defined(CORE_TEENSY)
-  #include <functional>
-#endif
+// #if defined(ARDUINO_ARCH_ESP32) || defined(ESP8266) || defined(CORE_TEENSY)
+//   #include <functional>
+//   // Rotary Encoder
+//   #define AIESP32ROTARYENCODER_DEFAULT_A_PIN 25
+//   #define AIESP32ROTARYENCODER_DEFAULT_B_PIN 26
+//   #define AIESP32ROTARYENCODER_DEFAULT_BUT_PIN 15
+// #endif
 
 class EncoderButton {
+
+  // private:
+  // uint8_t encoderAPin = AESP32ROITARYENCODER_DEFAULT_A_PIN;
+	// uint8_t encoderBPin = AIESP32ROTARYENCODER_DEFAULT_B_PIN;
+	// uint8_t encoderButtonPin = AIESP32ROTARYENCODER_DEFAULT_BUT_PIN;
 
   protected:
 
@@ -63,17 +79,35 @@ class EncoderButton {
     /**
      * Construct a rotary encoder with a button
      */
-    EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin);
+
+    // #if defined(ARDUINO_ARCH_ESP32)
+    //   EncoderButton(
+    //     uint8_t encoderPin1 = AIESP32ROTARYENCODER_DEFAULT_A_PIN, 
+    //     uint8_t encoderPin2 = AIESP32ROTARYENCODER_DEFAULT_B_PIN, 
+    //     uint8_t switchPin = AIESP32ROTARYENCODER_DEFAULT_BUT_PIN);
+    // #else
+      EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin);
+    // #endif  
 
     /**
      * Construct a rotary encoder without a button
      */
-    EncoderButton(byte encoderPin1, byte encoderPin2);
+    // #if defined(ARDUINO_ARCH_ESP32)
+    //   EncoderButton(
+    //     uint8_t encoderPin1 = AIESP32ROTARYENCODER_DEFAULT_A_PIN, 
+    //     uint8_t encoderPin2 = AIESP32ROTARYENCODER_DEFAULT_B_PIN);
+    // #else
+      EncoderButton(byte encoderPin1, byte encoderPin2);
+    // #endif
+
+
 
     /**
      * Construct a button only
      */
     EncoderButton(byte switchPin);
+
+
 
 
     /**
@@ -355,7 +389,7 @@ class EncoderButton {
     CallbackFunction idle_cb = NULL;
 
 
-  private:
+  private:  
     Encoder* encoder;
     Bounce* bounce;
     boolean haveButton = false;

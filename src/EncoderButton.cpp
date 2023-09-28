@@ -7,7 +7,6 @@
  */
 
 #include "EncoderButton.h"
-#define ARDUINO_ARCH_ESP32
 
 /*
 

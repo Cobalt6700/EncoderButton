@@ -36,8 +36,8 @@
 #include "Arduino.h"
 
 #if defined(ARDUINO_ARCH_ESP32)
-  #ifndef AiEsp32RotaryEncoder_h 
-    #include <AiEsp32RotaryEncoder.h>
+  #ifndef Encoder_esp32_h 
+    #include <Encoder_esp32.h>
   #endif
 #else
   //Standing on the shoulders of giants
@@ -50,20 +50,8 @@
   #include <Bounce2.h>
 #endif
 
-// #if defined(ARDUINO_ARCH_ESP32) || defined(ESP8266) || defined(CORE_TEENSY)
-//   #include <functional>
-//   // Rotary Encoder
-//   #define AIESP32ROTARYENCODER_DEFAULT_A_PIN 25
-//   #define AIESP32ROTARYENCODER_DEFAULT_B_PIN 26
-//   #define AIESP32ROTARYENCODER_DEFAULT_BUT_PIN 15
-// #endif
 
 class EncoderButton {
-
-  // private:
-  // uint8_t encoderAPin = AESP32ROITARYENCODER_DEFAULT_A_PIN;
-	// uint8_t encoderBPin = AIESP32ROTARYENCODER_DEFAULT_B_PIN;
-	// uint8_t encoderButtonPin = AIESP32ROTARYENCODER_DEFAULT_BUT_PIN;
 
   protected:
 
@@ -78,40 +66,38 @@ class EncoderButton {
      * Construct a rotary encoder with a button
      */
 
-    // #if defined(ARDUINO_ARCH_ESP32)
-    //   EncoderButton(
-    //     uint8_t encoderPin1 = AIESP32ROTARYENCODER_DEFAULT_A_PIN, 
-    //     uint8_t encoderPin2 = AIESP32ROTARYENCODER_DEFAULT_B_PIN, 
-    //     uint8_t switchPin = AIESP32ROTARYENCODER_DEFAULT_BUT_PIN);
-    // #else
-      EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin);
-    // #endif  
+    EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin);
 
     /**
      * Construct a rotary encoder without a button
      */
-    // #if defined(ARDUINO_ARCH_ESP32)
-    //   EncoderButton(
-    //     uint8_t encoderPin1 = AIESP32ROTARYENCODER_DEFAULT_A_PIN, 
-    //     uint8_t encoderPin2 = AIESP32ROTARYENCODER_DEFAULT_B_PIN);
-    // #else
-      EncoderButton(byte encoderPin1, byte encoderPin2);
-    // #endif
-
-
+    
+    EncoderButton(byte encoderPin1, byte encoderPin2);
 
     /**
      * Construct a button only
      */
     EncoderButton(byte switchPin);
 
+    #if defined(ARDUINO_ARCH_ESP32)
+      /**
+      * Begin Encoder for ESP32
+      */
 
-    void Encoderbegin();
+      void Encoderbegin();
 
-    void Encodersetup(void (*ISR_callback)(void));
+      /**
+      * Setup Encoder for ESP32
+      */
 
-    void EncoderISR();
+      void Encodersetup(void (*ISR_callback)(void));
 
+      /**
+      * Begin Encoder ISR for ESP32
+      */
+
+      void EncoderISR();
+    #endif
 
     /**
      * Read the position of the encoder and update the state of the button.
@@ -397,10 +383,11 @@ class EncoderButton {
   private:
 
     #if defined(ARDUINO_ARCH_ESP32)
-    AiEsp32RotaryEncoder* encoder; 
+      Encoder_esp32* encoder; 
     #else 
-    Encoder* encoder;
+      Encoder* encoder;
     #endif
+
     Bounce* bounce;
     boolean haveButton = false;
     boolean haveEncoder = false;
@@ -430,9 +417,9 @@ class EncoderButton {
     unsigned int _userState = 0;
     bool _enabled = true;
 
-    void (*ISR_callback)();
-
-
+    #if defined(ARDUINO_ARCH_ESP32)
+      void (*ISR_callback)();
+    #endif
 
 };
 

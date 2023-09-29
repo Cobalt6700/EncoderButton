@@ -10,21 +10,16 @@
 
 /*
 
-24/09/23
+29/09/23
 
-Had a go at combining ASesp32 into this lib. 
-
-Ran out of knowlage at brining in the setup function - plus it looks like AI needs to read 
-encoderchanged() to get an update. 
-
-Proboably easier to work out how to use AI instead of porting this accross. 
+Aiesp32 encoder lib split out into Encoder_esp32 Lib
 
 */
 
 
 #if defined(ARDUINO_ARCH_ESP32)
   EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2, byte switchPin )
-    : encoder(new AiEsp32RotaryEncoder(encoderPin1, encoderPin2)), bounce(new Bounce()) {
+    : encoder(new Encoder_esp32(encoderPin1, encoderPin2)), bounce(new Bounce()) {
     haveEncoder = true;
     haveButton = true;    
     // Top tip From PJRC's Encoder - without this delay the
@@ -38,7 +33,7 @@ Proboably easier to work out how to use AI instead of porting this accross.
   }
 
   EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2 )
-    : encoder(new AiEsp32RotaryEncoder(encoderPin1, encoderPin2)) {
+    : encoder(new Encoder_esp32(encoderPin1, encoderPin2)) {
     haveEncoder = true;
   }
 
@@ -140,7 +135,7 @@ Proboably easier to work out how to use AI instead of porting this accross.
 
     void EncoderButton::Encodersetup(void (*ISR_callback)(void)){
        encoder->setup(ISR_callback);
-       encoder->disableAcceleration();
+      //  encoder->disableAcceleration();
     }
 
     void EncoderButton::EncoderISR(){

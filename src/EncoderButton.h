@@ -33,13 +33,11 @@
 #ifndef EncoderButton_h
 #define EncoderButton_h
 
-#define ARDUINO_ARCH_ESP32
-
 #include "Arduino.h"
 
 #if defined(ARDUINO_ARCH_ESP32)
-  #ifndef AiEsp32RotaryEncoder.h
-    #include "AiEsp32RotaryEncoder.h"
+  #ifndef AiEsp32RotaryEncoder_h 
+    #include <AiEsp32RotaryEncoder.h>
   #endif
 #else
   //Standing on the shoulders of giants
@@ -398,8 +396,11 @@ class EncoderButton {
 
   private:
 
+    #if defined(ARDUINO_ARCH_ESP32)
     AiEsp32RotaryEncoder* encoder; 
-    //Encoder* encoder;
+    #else 
+    Encoder* encoder;
+    #endif
     Bounce* bounce;
     boolean haveButton = false;
     boolean haveEncoder = false;

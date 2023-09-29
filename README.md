@@ -1,5 +1,33 @@
 # EncoderButton
 
+This fork has been modified to work with an ESP32 using a new library called "Encoder_esp32". This is available from my Github and is required to use this fork: https://github.com/Cobalt6700/Encoder_esp32 
+I have not undertaken comprehenisive testing, however the mods seem to be working okay. 
+
+I have added an example *ESP32* to show how the code differs. The main probelm was setting up interrupts, this is now handled by the Encoder_esp32::setup() function:
+
+```cpp
+void Encoder_esp32::setup(void (*ISR_callback)(void))
+{
+	attachInterrupt(digitalPinToInterrupt(this->encoderAPin), ISR_callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(this->encoderBPin), ISR_callback, CHANGE);
+}
+```
+
+It also requires an ISR which needs to be setup in the sketch. 
+```cpp
+
+void IRAM_ATTR readEncoderISR() {
+  eb1.EncoderISR();
+}
+
+```
+
+I don't pretend to fully understand how this works - however it has worked for me in porting my sketch from a Nano EVERY to an ESP32. 
+
+Thanks to the authors of the original librarys! 
+
+# Back to the original library
+
 A comprehensive Rotary Encoder & Button library that makes working with rotary encoders (with or without a button) and individual buttons very efficient. 
 
 * Read the position & encoder increment for pressed and non-pressed actions. 

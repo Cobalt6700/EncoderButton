@@ -1,12 +1,12 @@
 {
   "name": "EncoderButton",
-  "version": "1.0.6",
+  "version": "1.0.6.5",
   "description": "Lossless event based rotary encoder+button library for Arduino and Teensy",
-  "keywords": "encoder, button, momentary, event, debounce",
+  "keywords": "encoder, button, momentary, event, debounce, ESP32",
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/Stutchbury/EncoderButton.git"
+    "url": "https://github.com/Cobalt6700/EncoderButton/tree/ESP32_Fork"
   },
   "authors":
   [
@@ -21,7 +21,8 @@
   "homepage": "https://github.com/Stutchbury/EncoderButton/",
   "dependencies": {
     "thomasfredericks/Bounce2": "2.71",
-    "paulstoffregen/Encoder": "1.4.2"
+    "paulstoffregen/Encoder": "1.4.2",
+    "Cobalt6700/Encoder_esp32": "1.0.0"
   },
   "frameworks": "Arduino",
   "platforms": "*"

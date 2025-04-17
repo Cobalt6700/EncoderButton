@@ -97,6 +97,8 @@ class EncoderButton {
       */
 
       void EncoderISR();
+
+      bool EncoderPulldowns(bool enc_pulldwn);
     #endif
 
     /**

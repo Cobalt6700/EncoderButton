@@ -142,6 +142,13 @@ Aiesp32 encoder lib split out into Encoder_esp32 Lib
       encoder->readEncoder_ISR();
     }
 
+    bool EncoderButton::EncoderPulldowns(bool enc_pulldwn = true){
+      encoder->areEncoderPinsPulldownforEsp32 = enc_pulldwn;
+      return encoder->areEncoderPinsPulldownforEsp32;
+    }
+
+
+// rotaryEncoder.areEncoderPinsPulldownforEsp32=false;
 
 
 #else
@@ -302,12 +309,17 @@ void EncoderButton::useQuadPrecision(bool prec) { positionDivider = (prec?1:4); 
 
 #if defined(ARDUINO_ARCH_ESP32)
 void EncoderButton::resetPosition(long pos) {
-  encoder->readAndReset();
+  // currentPosition = encoder->readAndReset(pos);
+  // encoderPosition = 0;
+  // currentPosition = pos;
+
+  currentPosition = encoder->readAndReset();
   encoderPosition = 0;
   currentPosition = pos;
 }
 
 void EncoderButton::resetPressedPosition(long pos) {
+  // encoder->readAndReset(pos);
   encoder->readAndReset();
   encoderPosition = 0;
   currentPressedPosition = pos;  

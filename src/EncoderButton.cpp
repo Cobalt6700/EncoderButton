@@ -30,6 +30,7 @@ Aiesp32 encoder lib split out into Encoder_esp32 Lib
     pinMode(switchPin, INPUT_PULLUP); //Set pullup first
     delayMicroseconds(2000); //Delay
     bounce->attach(switchPin, INPUT_PULLUP); //then attach button
+    Serial.begin(115200);
   }
 
   EncoderButton::EncoderButton(byte encoderPin1, byte encoderPin2 )
@@ -74,21 +75,27 @@ Aiesp32 encoder lib split out into Encoder_esp32 Lib
     }
     //encoder udate (fires encoder rotation callbacks)
     if ( haveEncoder && millis() > (rateLimitCounter + rateLimit) ) { 
-      long newPosition = floor(encoder->readEncoder()/positionDivider);
-      if (newPosition != encoderPosition) {
-        encoderIncrement = (newPosition - encoderPosition); 
-        encoderPosition = newPosition;
-        idleFlagged = false;    
-        lastEventMs = millis();
-        if ( _buttonState == HIGH ) {
-          currentPosition += encoderIncrement;
-          if (encoder_cb != NULL) encoder_cb (*this);
-        } else {
-          encodingPressed = true;
-          currentPressedPosition += encoderIncrement;
-          if (encoder_pressed_cb != NULL) encoder_pressed_cb (*this);
+      // if ( encoder->encoderChanged() ){
+        // long newPosition = floor(encoder->readEncoder()/positionDivider);
+        long newPosition = floor(encoder->readEncoder());        
+        // long newPosition = encoder->readEncoder();
+        // Serial.print("Value: ");
+		    // Serial.println(newPosition);
+        if (newPosition != encoderPosition) {
+          encoderIncrement = (newPosition - encoderPosition); 
+          encoderPosition = newPosition;
+          idleFlagged = false;    
+          lastEventMs = millis();
+          if ( _buttonState == HIGH ) {
+            currentPosition += encoderIncrement;
+            if (encoder_cb != NULL) encoder_cb (*this);
+          } else {
+            encodingPressed = true;
+            currentPressedPosition += encoderIncrement;
+            if (encoder_pressed_cb != NULL) encoder_pressed_cb (*this);
+          }
         }
-      }
+      // }
       rateLimitCounter = millis();
     }
     //fire long press callbacks
@@ -305,7 +312,12 @@ void EncoderButton::setLongPressRepeat(bool repeat /*=false*/) { repeatLongPress
 
 void EncoderButton::setRateLimit(long ms) { rateLimit = ms; }
 
-void EncoderButton::useQuadPrecision(bool prec) { positionDivider = (prec?1:4); }
+#if !defined(ARDUINO_ARCH_ESP32)
+void EncoderButton::useQuadPrecision(bool prec) { 
+  #warning "Using quad precision"
+  positionDivider = (prec?1:4); 
+}
+#endif
 
 #if defined(ARDUINO_ARCH_ESP32)
 void EncoderButton::resetPosition(long pos) {
@@ -375,7 +387,8 @@ void EncoderButton::enable(bool e) {
   _enabled = e;
   if ( e == true ) {
     //Reset the encoder so we don't trigger an event
-    encoder->setEncoderValue(encoderPosition*positionDivider);
+    // encoder->setEncoderValue(encoderPosition*positionDivider);
+    encoder->setEncoderValue(encoderPosition);
   }
 }
 #else

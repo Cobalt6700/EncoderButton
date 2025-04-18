@@ -30,6 +30,8 @@
  * 
  */
 
+ #define ARDUINO_ARCH_ESP32
+
 #ifndef EncoderButton_h
 #define EncoderButton_h
 
@@ -238,6 +240,7 @@ class EncoderButton {
      */
     void setRateLimit(long ms);
 
+    #if !defined(ARDUINO_ARCH_ESP32)
     /**
      * Quadrature encoders have four states for each 'click' of the 
      * rotary switch. By default we only fire once per click.
@@ -245,6 +248,7 @@ class EncoderButton {
      * Affects pressed+turning too.
      */
     void useQuadPrecision(bool prec);
+    #endif
 
     /**
      * Reset the counted position of the encoder. 
@@ -386,14 +390,16 @@ class EncoderButton {
 
     #if defined(ARDUINO_ARCH_ESP32)
       Encoder_esp32* encoder; 
+      // uint8_t positionDivider = 1;
     #else 
       Encoder* encoder;
+      uint8_t positionDivider = 4;
     #endif
 
     Bounce* bounce;
     boolean haveButton = false;
     boolean haveEncoder = false;
-    uint8_t positionDivider = 4;
+    // uint8_t positionDivider = 4;
     int32_t encoderPosition  = 0;
     int32_t currentPosition  = 0;
     int32_t currentPressedPosition  = 0;
